@@ -62,7 +62,7 @@ IRG_processing <- function(YEAR, DOY, input_brut_data_case, IRG_data_case, site)
   
 
 
-calcul_phenology_phase <- function (YEAR, input_brut_data_case, IRG_data_case, site){
+calcul_phenology_phase <- function (YEAR, input_brut_data_case, IRG_data_case, site,threshold ){
   
   
   library(terra)
@@ -95,7 +95,7 @@ calcul_phenology_phase <- function (YEAR, input_brut_data_case, IRG_data_case, s
   
   # seuil 10 % de |IRG_min| pour chaque pixel
   IRG_min  <- app(irg_stack, min, na.rm = TRUE)
-  thr10    <- abs(IRG_min) * 0.10
+  thr10    <- abs(IRG_min) * threshold
   
   template <- MAXD                                  # support vierge
   
@@ -129,7 +129,7 @@ calcul_phenology_phase <- function (YEAR, input_brut_data_case, IRG_data_case, s
   names(phase_stack) <- paste0("Phase_DOY", DOY_range)
   
   # ── 4. Sauvegarde (entiers 1-4) ───────────────────────────────────────────────
-  out_fp <- file.path(IRG_data_case, glue("Phenology_Phase_v3_{site}_{YEAR}.tif"))
+  out_fp <- file.path(IRG_data_case, glue("Phenology_Phase_{site}_{YEAR}.tif"))
   writeRaster(phase_stack, out_fp, overwrite = TRUE, datatype = "INT1U")
   
   message(
@@ -145,6 +145,68 @@ calcul_phenology_phase <- function (YEAR, input_brut_data_case, IRG_data_case, s
   
   
 }
+
+
+
+
+
+
+
+#’IRG max et son DOY
+
+IRG_MAX_processing <- function (input_IRG, site, YEAR, IRG_data_case) {
+  IRG  <- rast(input_IRG)
+  IRG_max <- app(IRG, fun = function(...) max(..., na.rm=TRUE))
+  vals <- IRG_max[]; vals <- vals[!is.na(vals) & is.finite(vals)]
+  hist(vals, breaks=seq(floor(min(vals)*100)/100, ceiling(max(vals)*100)/100, 0.01),
+       xlim=c(floor(min(vals)*100)/100, ceiling(max(vals)*100)/100),
+       main="Distribution de l'IRG max ", xlab="IRG max", ylab="Nombre de pixels")
+  
+  out_max <- file.path(IRG_data_case, paste0("IRG_max_", site, "_", YEAR, ".tif"))
+  writeRaster(IRG_max, out_max, overwrite=TRUE)
+  message("▶ IRG max save at :\n", out_max)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
