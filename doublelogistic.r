@@ -33,16 +33,7 @@
  source("config.R")
  
  # Parameters
- site      <- "OBJ"
-
- 
-
-
-
-
-
-
-
+ site      <- "OBJ" #name of study area
 
 #### 1. Downloading Plant Phenology Index (PPI) ####
 #--------------------------------------------------#
@@ -64,13 +55,12 @@ if (TRUE) {
   ## PARAMETERS 
   AREA  <- c(6.2073128713, 44.5732596315, 6.4282245343, 44.7147025674)  # xmin,ymin,xmax,ymax
   YEARS <- 2023:2024                                                    # Load year
-  
   VAR <- c("AMPL","EOSD","EOSV","LSLOPE","MAXD","MAXV","MINV","RSLOPE","SOSD","SOSV")
   
   
   # CONNECTION WEkEO 
-  username <- "pcholer"
-  password <- "Cardamine@2021"
+  username <- "xxxxxxxxx"
+  password <- "xxxxxxxxx"
   client   <- Client$new(username, password, save_credentials = TRUE)
   
   
@@ -152,7 +142,6 @@ if (TRUE){
 
 #### 3. Calcul et empilement de l’IRG (Instantaneous Rate of Green‐up) ####
 #------------------------------------------------------------------------#
-
 if (TRUE){
   ## DESCRIPTION
   #  IRG processing based on PPI parameters previously computed in parts 1 & 2
@@ -171,13 +160,13 @@ if (TRUE){
   #  Function 3– Extract IRG-max, i.e. the maximum IRG reached (normally at MAXD).
   #
   #  Requirements
-  #    • PPI parameters already computed and re-projected for the study area
+  #    - PPI parameters already computed and re-projected for the study area
   #      in part 2.
   #
   #  Outputs
-  #    • IRG_season_<site>_<YEAR>.tif   — multi-band stack (one band per DOY)
-  #    • Phenology_Phase_<site>_<YEAR>.tif  — multi-band phenological phases
-  #    • IRG_max_<site>_<YEAR>.tif      — IRG-max raster
+  #    - IRG_season_<site>_<YEAR>.tif   — multi-band stack (one band per DOY)
+  #    - Phenology_Phase_<site>_<YEAR>.tif  — multi-band phenological phases
+  #    - IRG_max_<site>_<YEAR>.tif      — IRG-max raster
   #
   #  All outputs are saved to:   output/data_<site>/IRG/
   
@@ -190,7 +179,8 @@ if (TRUE){
   ## PARAMETERS
   site      <- "LALA"
   YEAR      <- 2023
-  DOY_range <- 121:334
+  DOY_range <- 121:334 # 
+  
   
   
   
@@ -214,147 +204,24 @@ if (TRUE){
   IRG_processing(YEAR, DOY, input_brut_data_case, IRG_data_case, site)
   
   # Function 2 : calcul the phenology phase with IRG
-  calcul_phenology_phase(YEAR, input_brut_data_case, IRG_data_case, site)
+  # Threshold of the plateau phenology phase 0.10 = 10% of the EOSD value
+  calcul_phenology_phase(YEAR, input_brut_data_case, IRG_data_case, site, threshold = 0.10)
   
   
   
+  # Function 3 : calcul IRG max, DOY
+  # IRG stack in function 1 (input)
+  input_IRG <- file.path(IRG_data_case, paste0("IRG_season_",site,"_",YEAR,".tif"))
   
-  
- 
-  
-  
-  
-  
-  
+  IRG_MAX_processing(input_IRG, site, YEAR, IRG_data_case)
   
   
   
-  
-  
-  #’IRG max et son DOY
-  
-  IRG_max <- app(irg_stack, fun = function(...) max(..., na.rm=TRUE))
-   vals <- IRG_max[]; vals <- vals[!is.na(vals) & is.finite(vals)]
-   hist(vals, breaks=seq(floor(min(vals)*100)/100, ceiling(max(vals)*100)/100, 0.01),
-        xlim=c(floor(min(vals)*100)/100, ceiling(max(vals)*100)/100),
-        main="Distribution de l'IRG max (2023)", xlab="IRG max", ylab="Nombre de pixels")
    
-   out_max <- file.path(output_directory, paste0("IRG_max_", site, "_", YEAR, ".tif"))
-   writeRaster(IRG_max, out_max, overwrite=TRUE)
-   message("▶ IRG max sauvé sous :\n", out_max)
-   
-   
-   
-   
-   
-   
-   
-   
-   ## V1
-   
-   
-   
-   library(terra)
-   library(glue)
-   
-   # ── 1. Repères (en DOY) ──────────────────────────────────────────────────────
-   MAXD   <- rast(file.path(output_directory, glue("MAXD_{site}_{YEAR}.tif")))
-   OFFSET <- rast(file.path(output_directory, glue("OFFSET_{site}_{YEAR}.tif")))
-   EOSD   <- rast(file.path(output_directory, glue("EOSD_{site}_{YEAR}.tif")))
-   
-   lag  <- 1000 * as.numeric(substr(YEAR, 3, 4))   # 2023 → 23000
-   MAXD <- MAXD - lag ; MAXD[MAXD < 1 | MAXD > 365] <- NA
-   EOSD <- EOSD - lag ; EOSD[EOSD < 1 | EOSD > 365] <- NA
-   valid <- is.finite(MAXD) & is.finite(EOSD)
-   
-   
-   
-   print(MAXD)
-   print(OFFSET)
-   print(EOSD)
-   print(OM10)
-   
-   
-   
-   
-   
-   # ── 2. IRG empilé 121–334 ────────────────────────────────────────────────────
-   irg_stack <- rast(file.path(output_directory, glue("IRG_season_{site}_{YEAR}.tif")))
-   DOY_range <- 121:334                              # même ordre que les bandes IRG
-   
-   # seuil 10 % de |IRG_min| pour chaque pixel
-   IRG_min  <- app(irg_stack, min, na.rm = TRUE)
-   thr10    <- abs(IRG_min) * 0.10
-   
-   template <- MAXD                                  # support vierge
-   
-   # ── 3. Phase par jour ────────────────────────────────────────────────────────
-   phase_stack <- rast(lapply(seq_along(DOY_range), function(i){
-     
-     d    <- DOY_range[i]
-     irg  <- irg_stack[[i]]
-     d_r  <- setValues(template, d)
-     phase <- setValues(template, NA_integer_)
-     
-     ## 1 • pousse (avant MAXD) ou IRG >= 0
-     sel <- valid & (d_r <= MAXD | irg >= 0)
-     phase[sel] <- 1
-     
-     ## 2 • plateau : MAXD < d ≤ EOSD  &  |IRG| < 10 % |IRG_min|
-     sel <- valid & d_r > MAXD & d_r <= EOSD & abs(irg) < thr10
-     phase[sel] <- 2
-     
-     ## 3 • déperissement : dès que |IRG| ≥ 10 % ET d ≤ EOSD
-     sel <- valid & d_r > MAXD & d_r <= EOSD & abs(irg) >= thr10
-     phase[sel] <- 3
-     
-     ## 4 • sénescence : après EOSD
-     sel <- valid & d_r > EOSD
-     phase[sel] <- 4
-     
-     phase
-   }))
-   
-   names(phase_stack) <- paste0("Phase_DOY", DOY_range)
-   
-   # ── 4. Sauvegarde (entiers 1-4) ───────────────────────────────────────────────
-   out_fp <- file.path(output_directory, glue("Phenology_Phase_v3_{site}_{YEAR}.tif"))
-   writeRaster(phase_stack, out_fp, overwrite = TRUE, datatype = "INT1U")
-   
-   message(
-     "✓ Phases phénologiques écrites dans ", out_fp, "\n",
-     "   1 = pousse, 2 = plateau (|IRG| < 10 %), 3 = dépérissement, 4 = sénescence"
-   )
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-
-
-
-
-
-
 }
+   
+   
+   
 
 
 
@@ -366,23 +233,8 @@ if (TRUE){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### 3. Calcul of double logistic in PPI ####
+#### 4. EN COURS :  Calcul of double logistic in PPI ####
 #-------------------------------------------#
-
 if (TRUE){
   library(terra)
   
@@ -449,7 +301,7 @@ if (TRUE){
   
   
   
-}
+
 
 
 
@@ -1296,6 +1148,7 @@ if (TRUE){
 
 
 
+}
 
 
 
@@ -1307,8 +1160,8 @@ if (TRUE){
 
 
 
-
-
+ username <- "pcholer"
+ password <- "Cardamine@2021"
 
 
 
