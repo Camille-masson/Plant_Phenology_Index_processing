@@ -28,12 +28,11 @@
 
 #### 0. LIBRARY and PARAMETERS ####
 #---------------------------------#
- 
  # Source config
  source("config.R")
  
  # Parameters
- site      <- "OBJ" #name of study area
+ site      <- "Cayolle" #name of study area
 
 #### 1. Downloading Plant Phenology Index (PPI) ####
 #--------------------------------------------------#
@@ -47,20 +46,35 @@ if (TRUE) {
   #
   # The download of the tiles for all parameters will be automatically saved
   # in the folder input/data_"siste"/downloads
+  # https://wekeo.copernicus.eu/data?view=viewer&objects=W3siaWQiOiJjMCIsImZlYXR1cmUiOnsidHlwZSI6IkZlYXR1cmUiLCJnZW9tZXRyeSI6eyJ0eXBlIjoiUG9seWdvbiIsImNvb3JkaW5hdGVzIjpbW1s2Ljg2NjUzNjY4ODM3MTM4Miw0NC4yMTIxMTQ4NjQxMzkxOV0sWzYuNjQ3MDU4MTkwMTgxOTE0LDQ0LjMzMjg4MjQxMDE5NDA5XV1dfSwicHJvcGVydGllcyI6eyJjcnMiOiJlcHNnOjM4NTciLCJpc1VzZXJEZWZpbmVkIjp0cnVlLCJpc05vcnRoUG9sYXIiOmZhbHNlLCJpc1NvdXRoUG9sYXIiOmZhbHNlLCJyZWZDb29yZHMiOltbNi43NTY3OTc0MzkyNzY2NDgsNDQuMjcyNDk4NjM3MTY2NjM1XV19fSwidHlwZSI6ImFvaSIsImNvb3JkcyI6W1s2LjY0NzA1ODE5MDE4MTkxNCw0NC4zMzI4ODI0MTAxOTQwOV0sWzYuODY2NTM2Njg4MzcxMzgyLDQ0LjIxMjExNDg2NDEzOTE5XV19XQ%3D%3D&layers=eyJjMyI6eyJpZCI6ImMzIiwib3BlbkRyYXdlck5hbWUiOiJzdWJzZXR0ZXIiLCJyZXBsYWNlbWVudENvbG9yTWFwSWQiOm51bGwsInZhbHVlTWluIjpudWxsLCJ2YWx1ZU1heCI6bnVsbCwibGF5ZXJJZCI6IkVPOkNMTVM6REFUOkNMTVNfR0xPQkFMX05EVklfMzAwTV9WMV8xMERBSUxZX05FVENERi9fX0RFRkFVTFRfXy9jbG1zX2dsb2JhbF9uZHZpXzMwMG1fdjFfMTBkYWlseSIsInpJbmRleCI6MjAsImlzSW5pdGlhbCI6dHJ1ZSwiaXNWaWV3YWJsZSI6dHJ1ZSwidGltZSI6MTYwOTQ1OTIwMDAwMCwiaXNSZXBsYWNpbmciOmZhbHNlfX0%3D&center=6.7443639282954715%2C44.27118899102734&zoom=19.93
   
   ## FUNCTION 
   source(file.path(functions_case, "Function_processing.R"))
   
   
   ## PARAMETERS 
-  AREA  <- c(6.2073128713, 44.5732596315, 6.4282245343, 44.7147025674)  # xmin,ymin,xmax,ymax
-  YEARS <- 2023:2024                                                    # Load year
+  
+  
+  
+  # Cayolle / Sanguiniere : 6.647058190181914,44.21211486413919,6.866536688371381,44.33288241019409
+  # Viso :  6.817605924586003,44.63831966067048,7.215308603804095,44.81199888158953
+  
+  
+  AREA  <- c(   6.817605924586003,
+                44.63831966067048,
+                7.215308603804095,
+                44.81199888158953)  # xmin,ymin,xmax,ymax
+  
+  
+  
+  
+  YEARS <- 2017:2018                                                   # Load year
   VAR <- c("AMPL","EOSD","EOSV","LSLOPE","MAXD","MAXV","MINV","RSLOPE","SOSD","SOSV")
   
   
   # CONNECTION WEkEO 
-  username <- "xxxxxxxxx"
-  password <- "xxxxxxxxx"
+  username <- "pcholer"
+  password <- "Cardamine@2021"
   client   <- Client$new(username, password, save_credentials = TRUE)
   
   
@@ -76,8 +90,10 @@ if (TRUE) {
   ## CODE
   
   data_download(out_dir, AREA, client, YEARS, VAR)
-
-
+  
+ 
+  
+  
 }
 
 #### 2. Estimate the missing parameters  (ONSET, GROWTH, OFFSET, SENESC) ####
@@ -110,7 +126,7 @@ if (TRUE){
   ## PARAMETERS 
   VAR  <- c("AMPL","EOSD","EOSV","LSLOPE","MAXD","MAXV","MINV","RSLOPE","SOSD","SOSV")
   resolution = 10
-  YEAR = 2023
+  YEAR = 2018
   
   
   
@@ -127,14 +143,14 @@ if (TRUE){
   brut_data_case <- file.path(output_data_case, "raw_data")
   
   
-  for (d in c(input_case, data_case, extent_case, output_directory, output_data_case, brut_data_case)) {
+  for (d in c(input_case, data_case, extent_case, output_data_case, brut_data_case)) {
     if (!dir.exists(d)) dir.create(d, recursive = TRUE)
   }
   
   ## CODE
   
   
-  estimate_parameters(VAR, mask_shp, resolution, downloads_case, YEAR, brut_data_case) 
+  estimate_parameters(VAR, mask_shp, resolution, downloads_case, YEAR, brut_data_case, site) 
   
   
   
@@ -177,9 +193,9 @@ if (TRUE){
   
   
   ## PARAMETERS
-  site      <- "LALA"
+  site      <- "Cayolle"
   YEAR      <- 2023
-  DOY_range <- 121:334 # 
+  DOY_range <- 60:365 # 
   
   
   
@@ -201,12 +217,20 @@ if (TRUE){
   ## CODE
   
   # Function 1 : calcul IRG and stack in one rast by day (DOY)
-  IRG_processing(YEAR, DOY, input_brut_data_case, IRG_data_case, site)
+  IRG_processing(YEAR, DOY_range, input_brut_data_case, IRG_data_case, site)
+  
+  # Chemin vers votre raster IRG saisonnier
+  irg_season_path <- file.path(IRG_data_case, paste0("IRG_season_",site,"_",YEAR,".tif"))
+ 
+  # Appel de la fonction
+  check_irg(irg_season_path, site, YEAR)
+  
+  
+  
   
   # Function 2 : calcul the phenology phase with IRG
   # Threshold of the plateau phenology phase 0.10 = 10% of the EOSD value
-  calcul_phenology_phase(YEAR, input_brut_data_case, IRG_data_case, site, threshold = 0.10)
-  
+  calcul_phenology_phase(YEAR, input_brut_data_case, IRG_data_case, site, threshold = 0.1)
   
   
   # Function 3 : calcul IRG max, DOY
@@ -215,32 +239,317 @@ if (TRUE){
   
   IRG_MAX_processing(input_IRG, site, YEAR, IRG_data_case)
   
-  
-  
-   
+  # Function 4 : nombre de jours avant / après MAXD
+  delta_IRGmax_processing(
+    YEAR               = YEAR,
+    site               = site,
+    input_brut_data_case = input_brut_data_case,
+    output_dir         = IRG_data_case,
+    DOY_range          = 60:365            # ou 121:334 selon ton besoin
+  )
 }
-   
-   
-   
 
-
-
-
-
-
-
-
-
-
-
-#### 4. EN COURS :  Calcul of double logistic in PPI ####
+#### 4. Calcul of double logistic in PPI ####
 #-------------------------------------------#
 if (TRUE){
   library(terra)
   
-  # 1. Paramètres
   
-  output_directory <- file.path(getwd(), "input", paste0("data_", site), "downloads")
+  ## FUNCTION 
+  source(file.path(functions_case, "Function_calcul_indicators.R"))
+  
+  ## PARAMÈTRES GÉNÉRAUX
+  site      <- "Cayolle"
+  YEAR      <- 2022
+  DOY_range <- 60:365          # 1er mai → 30 novembre
+  
+  ## INPUT
+  input_data_case  <- file.path(output_case, paste0("data_", site))
+  input_brut_data_case <- file.path(input_data_case, "raw_data")
+  ## OUTPUT
+  output_data_case  <- file.path(output_case, paste0("data_", site))
+  
+  
+  ## OUTPUT
+  output_data_case  <- file.path(output_case, paste0("data_", site))
+  PPI_data_case <- file.path(output_data_case, "PPI")
+  
+  for (d in c(IRG_data_case, input_brut_data_case)) {
+    if (!dir.exists(d)) dir.create(d, recursive = TRUE)
+  }
+  
+  ## CODE
+  # Fonction 1 : Calcul du PPI
+  PPI_processing(YEAR, DOY_range, input_brut_data_case, PPI_data_case, site)
+  
+  
+  # Fonction 2 : check le PPI
+  
+  # Chemin NDVI :
+  ndvi_path <- file.path(PPI_data_case, paste0("PPI_season_",site,"_",YEAR,".tif"))
+  
+  check_ndvi(ndvi_path, site, YEAR)
+  
+  # Fonction 3 : indicateurs supplémentaire ("AMPL", "LENGTH", "ONSET10","MaxSlope", "GreenUpDur", "GreenDownDur", "AsymSlope")
+  input_brut_data_case = file.path(output_case, paste0("data_",site,"/raw_data"))
+  extra_data_case = file.path(output_case, paste0("data_",site,"/extra")) 
+  extra_indicators(
+    YEAR,
+    site,
+    input_brut_data_case =  input_brut_data_case,
+    extra_data_case      = extra_data_case
+  )
+  
+  
+  
+  
+  ## Fonction 4 : Delta_Day de MAXV : 
+  #!!!!!!!!!!!!!!!!!!!!!!! A REPRENDRE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  DeltaDay_MAXD_processing(
+    YEAR                = YEAR,
+    DOY_range           = DOY_range,           # <— tu peux mettre 60:365
+    input_brut_data_case = input_brut_data_case,
+    delta_data_case     = PPI_data_case,
+    site                = site
+  )
+  
+  
+  ## Fonction 5 : Exctraction du pic de veget (MAXV)
+ 
+  Pmax <- PPI_extract_peak(site, YEAR, PPI_data_case, amp_min = 0.02, write_out = TRUE)
+  
+  
+  site <- "Cayolle"
+  PPI_data_case <- file.path(output_case, paste0("data_", site), "PPI")
+  
+  r22 <- PPI_extract_thrdate(site, 2022, PPI_data_case, pct = 0.10,
+                             relative_to = "max", side = "rising",
+                             amp_min = 0.02, write_out = TRUE)
+  
+  r23 <- PPI_extract_thrdate(site, 2023, PPI_data_case, pct = 0.10,
+                             relative_to = "max", side = "rising",
+                             amp_min = 0.02, write_out = TRUE)
+  
+  # delta des dates 10%MAX (2023 - 2022)
+  d10 <- r23[[1]] - r22[[1]]
+  names(d10) <- "delta_DOY_10pctMAX_2023_minus_2022"
+  
+ plot(d10_clean)
+  
+ 
+ 
+ 
+ library(terra)
+ 
+ # d10 : ton raster de delta (peut être réel si tu as fait l'interpolation)
+ k3 <- matrix(1, 3, 3)
+ 
+ d10_med3 <- focal(d10, w = k3, fun = median,
+                   na.rm = TRUE, na.policy = "omit",
+                   pad = TRUE, padValue = NA)
+ 
+ # Seuil d'écart autorisé (à adapter : 7–14 jours selon ton grain)
+ THR <- 10
+ 
+ d10_clean <- ifel(
+   is.na(d10), NA,
+   ifel(is.na(d10_med3), d10,        # pas de voisin → ne change rien
+        ifel(abs(d10 - d10_med3) > THR, d10_med3, d10))
+ )
+ 
+ 
+ 
+ 
+ 
+  library(terra)
+ 
+ # dossier de sortie (adapte si besoin)
+ if (!dir.exists(PPI_data_case)) dir.create(PPI_data_case, recursive = TRUE)
+ 
+ out_file <- file.path(
+   PPI_data_case,
+   sprintf("DOY_10pctMAX_delta_%s_2023_minus_2022_clean.tif", site)
+ )
+ 
+ # écriture (Δ de jours → INT16 signé)
+ writeRaster(
+   d10_clean, out_file, overwrite = TRUE,
+   wopt = list(
+     datatype = "INT2S",
+     NAflag   = -32768,
+     gdal     = c("COMPRESS=DEFLATE", "PREDICTOR=2", "ZLEVEL=9")
+   )
+ )
+ 
+ cat("✅ Delta écrit :", out_file, "\n")
+  
+  
+  
+  
+   library(terra)
+  
+  # --- chemins ---
+  site <- "Viso"
+  YEAR <- 2023
+  input_brut_data_case <- file.path(output_case, paste0("data_", site), "raw_data")
+  
+  # --- charge les rasters de paramètres ---
+  PPImin <- rast(file.path(input_brut_data_case, paste0("MINV_",  site, "_", YEAR, ".tif")))
+  PPImax <- rast(file.path(input_brut_data_case, paste0("MAXV_",  site, "_", YEAR, ".tif")))
+  ONSET  <- rast(file.path(input_brut_data_case, paste0("ONSET_", site, "_", YEAR, ".tif")))
+  OFFSET <- rast(file.path(input_brut_data_case, paste0("OFFSET_",site, "_", YEAR, ".tif")))
+  GROWTH <- rast(file.path(input_brut_data_case, paste0("GROWTH_",site, "_", YEAR, ".tif")))
+  SENESC <- rast(file.path(input_brut_data_case, paste0("SENESC_",site, "_", YEAR, ".tif")))
+  
+  # si tu veux démarrer à SOSD (0.25*AMP) :
+  SOSD   <- rast(file.path(input_brut_data_case, paste0("SOSD_",  site, "_", YEAR, ".tif")))
+  # le jour du maximum (MAXD) est aussi dispo dans tes données brutes :
+  MAXD   <- rast(file.path(input_brut_data_case, paste0("MAXD_",  site, "_", YEAR, ".tif")))
+  
+  # --- fonction AUC croissance analytique ---
+  # t1 et t2 sont des rasters (par ex. SOSD et MAXD, ou ONSET et MAXD)
+  AUC_growth_fun <- function(PPImin, PPImax, ONSET, GROWTH, t1, t2){
+    # on protège les cas dégénérés (t2 <= t1 ou GROWTH = 0)
+    bad <- is.nan(t1) | is.nan(t2) | (t2 <= t1) | (GROWTH == 0)
+    auc <- PPImin * (t2 - t1) +
+      (PPImax - PPImin) / GROWTH * (
+        log1p(exp(GROWTH * (t2 - ONSET))) -
+          log1p(exp(GROWTH * (t1 - ONSET)))
+      )
+    auc[bad] <- NA
+    auc
+  }
+  
+  # --- calcule l’AUC entre SOSD et MAXD (ou remplace SOSD par ONSET si tu préfères) ---
+  AUC_growth <- lapp(
+    c(PPImin, PPImax, ONSET, GROWTH, SOSD, MAXD),
+    fun = AUC_growth_fun
+  )
+  
+  # --- sauvegarde ---
+  out_auc <- file.path(output_case, paste0("data_", site), "extra",
+                       paste0("AUC_growth_", site, "_", YEAR, ".tif"))
+  dir.create(dirname(out_auc), recursive = TRUE, showWarnings = FALSE)
+  writeRaster(AUC_growth, out_auc, overwrite = TRUE)
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  # paramètres identiques à PPI_processing()
+  YEAR      <- 2023
+  site      <- "Viso"
+  DOY_range <- 60:365
+  
+  base_case <- file.path(output_case, paste0("data_", site))
+  
+  EOS10pct_processing(
+    YEAR,
+    DOY_range,
+    input_brut_data_case,
+    PPI_data_case ,
+    site                 = site,
+    out_dir              = file.path(output_case, "extra"),
+    overwrite = TRUE   # même dossier que tes indicateurs « extra »
+  )
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  ## INPUT
+  input_data_case  <- file.path(output_case, paste0("data_", site))
+  input_brut_data_case <- file.path(input_data_case, "raw_data")
+  
+  
+  
+  ## OUTPUT
+  output_data_case  <- file.path(output_case, paste0("data_", site))
+  IRG_data_case <- file.path(output_data_case, "NDVI")
+  
+  for (d in c(IRG_data_case, input_brut_data_case)) {
+    if (!dir.exists(d)) dir.create(d, recursive = TRUE)
+  }
+  
+  
   
   # 2. On importe directement les rasters dérivés produits en partie 2
   params <- c("MINV","MAXV","ONSET","OFFSET","GROWTH","SENESC")
@@ -272,7 +581,7 @@ if (TRUE){
   }
   
   # 4. Application journalière & empilement
-  DOY_range <- 0:365  # du 1er mai (121) au 30 nov (334)
+  DOY_range <- 121:334  # du 1er mai (121) au 30 nov (334)
   
   ndvi_list <- lapply(DOY_range, function(doy) {
     lapp(

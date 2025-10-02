@@ -21,4 +21,4 @@ dir.create(output_case, recursive = TRUE, showWarnings = FALSE)
 
 
 
-function_files <- list.files(function_case, pattern = "\\.R$", full.names = TRUE)
+function_files <- list.files(functions_case, pattern = "\\.R$", full.names = TRUE)
