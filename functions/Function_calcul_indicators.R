@@ -1,4 +1,4 @@
-IRG_processing <- function(YEAR, DOY, input_brut_data_case, IRG_data_case, site){
+IRG_processing <- function(YEAR, DOY, input_brut_data_case, IRG_data_case, site,S){
   
   
   
@@ -7,7 +7,7 @@ IRG_processing <- function(YEAR, DOY, input_brut_data_case, IRG_data_case, site)
   params <- c("MINV","MAXV","ONSET","OFFSET","GROWTH","SENESC")
   rasters <- setNames(
     lapply(params, function(p) {
-      fp <- file.path(input_brut_data_case, paste0(p, "_", site, "_", YEAR, ".tif"))
+      fp <- file.path(input_brut_data_case, paste0(p, "_", site, "_", YEAR,"_",s, ".tif"))
       if (!file.exists(fp)) stop("Fichier introuvable : ", fp)
       rast(fp)
     }),
@@ -266,7 +266,7 @@ NDVI_processing <- function(YEAR,
                             DOY_range,
                             input_brut_data_case,
                             NDVI_data_case,
-                            site) {
+                            site, S) {
   library(terra)
   
   ##--------------------------------------------------------------------------##
@@ -276,7 +276,7 @@ NDVI_processing <- function(YEAR,
   
   rasters <- setNames(
     lapply(params, function(p) {
-      fp <- file.path(input_brut_data_case, paste0(p, "_", site, "_", YEAR, ".tif"))
+      fp <- file.path(input_brut_data_case, paste0(p, "_", site, "_", YEAR, "_",S, ".tif"))
       if (!file.exists(fp)) stop("Fichier introuvable : ", fp)
       rast(fp)
     }),
@@ -363,7 +363,7 @@ PPI_processing <- function(YEAR,
                            DOY_range,
                            input_brut_data_case,
                            PPI_data_case,
-                           site) {
+                           site, S) {
   suppressPackageStartupMessages(library(terra))
   
   ##--------------------------------------------------------------------------##
@@ -373,7 +373,7 @@ PPI_processing <- function(YEAR,
   rasters <- setNames(
     lapply(params, function(p) {
       fp <- file.path(input_brut_data_case,
-                      paste0(p, "_", site, "_", YEAR, ".tif"))
+                      paste0(p, "_", site, "_", YEAR,"_",S, ".tif"))
       if (!file.exists(fp))
         stop("Fichier introuvable : ", fp)
       rast(fp)

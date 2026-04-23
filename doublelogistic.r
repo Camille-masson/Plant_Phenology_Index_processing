@@ -32,7 +32,7 @@
  source("config.R")
  
  # Parameters
- site      <- "Cayolle" #name of study area
+ site      <- "Saut-du-Laire" #name of study area
 
 #### 1. Downloading Plant Phenology Index (PPI) ####
 #--------------------------------------------------#
@@ -58,19 +58,19 @@ if (TRUE) {
   
   # Cayolle / Sanguiniere : 6.647058190181914,44.21211486413919,6.866536688371381,44.33288241019409
   # Viso :  6.817605924586003,44.63831966067048,7.215308603804095,44.81199888158953
+  # Ponsonniere :  6.405766935734043,44.96862236839072,6.607072135275763,45.07763175716149
+  # Mantet : 2.2203810553193883,42.405017256210144,2.39337576385851,42.50565598294207
+  # Grande-Cabane :  6.32504036174492,44.73877510184752,6.566190012252772,44.80593669784491
+  # Mourtes/Parau :  1.750411965629358,42.490782975005644,2.150626281252518,42.77652923900098
+  # Saut-du-Laire : 6.365385735714717, 44.64673887053517, 6.427936551466626, 44.677630455697546
+  AREA  <- c(  6.365385735714717, 44.64673887053517, 6.427936551466626, 44.677630455697546)  # xmin,ymin,xmax,ymax
   
   
-  AREA  <- c(   6.817605924586003,
-                44.63831966067048,
-                7.215308603804095,
-                44.81199888158953)  # xmin,ymin,xmax,ymax
   
   
-  
-  
-  YEARS <- 2017:2018                                                   # Load year
+  YEARS <- 2024                                                 # Load year
   VAR <- c("AMPL","EOSD","EOSV","LSLOPE","MAXD","MAXV","MINV","RSLOPE","SOSD","SOSV")
-  
+  S <- "s1" # Attention s1 en temp normale (cycle 1 cycle 2)
   
   # CONNECTION WEkEO 
   username <- "pcholer"
@@ -89,10 +89,7 @@ if (TRUE) {
   
   ## CODE
   
-  data_download(out_dir, AREA, client, YEARS, VAR)
-  
- 
-  
+  data_download(out_dir, AREA, client, YEARS, VAR,S)
   
 }
 
@@ -124,34 +121,31 @@ if (TRUE){
   
   
   ## PARAMETERS 
+  site      <- "Saut-du-Laire"
   VAR  <- c("AMPL","EOSD","EOSV","LSLOPE","MAXD","MAXV","MINV","RSLOPE","SOSD","SOSV")
-  resolution = 10
-  YEAR = 2018
-  
-  
+  YEAR = 2024
+  S <- "s1"
   
   ## INPOUT
   data_case        <- file.path(input_case, paste0("data_", site))
   downloads_case    <- file.path(data_case, "downloads")
   extent_case      <- file.path(data_case, "extent")
-    
-  # Un .SHP de la zone d'étude a DEPOSER dans le dossier extent
-  mask_shp <- file.path(extent_case, paste0("Masque_", site, ".shp"))
   
   ## OUTPUT
   output_data_case  <- file.path(output_case, paste0("data_", site))
   brut_data_case <- file.path(output_data_case, "raw_data")
-  
-  
+    
   for (d in c(input_case, data_case, extent_case, output_data_case, brut_data_case)) {
     if (!dir.exists(d)) dir.create(d, recursive = TRUE)
   }
   
+  # Un .tif de la zone d'étude a DEPOSER dans le dossier extent
+  template <- file.path(extent_case, paste0("template_", site, ".tif"))
+  
+  
+  
   ## CODE
-  
-  
-  estimate_parameters(VAR, mask_shp, resolution, downloads_case, YEAR, brut_data_case, site) 
-  
+  estimate_parameters(VAR, template = template, downloads_case, YEAR, brut_data_case, site, cycle = S) 
   
   
 }
@@ -193,17 +187,14 @@ if (TRUE){
   
   
   ## PARAMETERS
-  site      <- "Cayolle"
-  YEAR      <- 2023
+  site      <- "Sanguiniere"
+  YEAR      <- 2024
   DOY_range <- 60:365 # 
-  
-  
-  
-  
+  S <- "s1"
   
   ## INPUT
   input_data_case  <- file.path(output_case, paste0("data_", site))
-  input_brut_data_case <- file.path(input_data_case, "raw_data")
+  input_brut_data_case <- file.path(input_data_case, "raw_data",paste0(S))
   
   
   ## OUTPUT
@@ -217,7 +208,7 @@ if (TRUE){
   ## CODE
   
   # Function 1 : calcul IRG and stack in one rast by day (DOY)
-  IRG_processing(YEAR, DOY_range, input_brut_data_case, IRG_data_case, site)
+  IRG_processing(YEAR, DOY_range, input_brut_data_case, IRG_data_case, site,S)
   
   # Chemin vers votre raster IRG saisonnier
   irg_season_path <- file.path(IRG_data_case, paste0("IRG_season_",site,"_",YEAR,".tif"))
@@ -254,21 +245,19 @@ if (TRUE){
 if (TRUE){
   library(terra)
   
-  
   ## FUNCTION 
   source(file.path(functions_case, "Function_calcul_indicators.R"))
   
   ## PARAMÈTRES GÉNÉRAUX
-  site      <- "Cayolle"
-  YEAR      <- 2022
+  site      <- "Saut-du-Laire"
   DOY_range <- 60:365          # 1er mai → 30 novembre
-  
+  YEAR = 2024
+  S = "s1"
   ## INPUT
   input_data_case  <- file.path(output_case, paste0("data_", site))
-  input_brut_data_case <- file.path(input_data_case, "raw_data")
+  input_brut_data_case <- file.path(input_data_case, "raw_data",paste0(S))
   ## OUTPUT
   output_data_case  <- file.path(output_case, paste0("data_", site))
-  
   
   ## OUTPUT
   output_data_case  <- file.path(output_case, paste0("data_", site))
@@ -280,43 +269,77 @@ if (TRUE){
   
   ## CODE
   # Fonction 1 : Calcul du PPI
-  PPI_processing(YEAR, DOY_range, input_brut_data_case, PPI_data_case, site)
+  PPI_processing(YEAR, DOY_range, input_brut_data_case, PPI_data_case, site, S)
   
   
   # Fonction 2 : check le PPI
   
   # Chemin NDVI :
-  ndvi_path <- file.path(PPI_data_case, paste0("PPI_season_",site,"_",YEAR,".tif"))
+  #ndvi_path <- file.path(PPI_data_case, paste0("PPI_season_",site,"_",YEAR,".tif"))
   
-  check_ndvi(ndvi_path, site, YEAR)
+  #check_ndvi(ndvi_path, site, YEAR)
   
   # Fonction 3 : indicateurs supplémentaire ("AMPL", "LENGTH", "ONSET10","MaxSlope", "GreenUpDur", "GreenDownDur", "AsymSlope")
-  input_brut_data_case = file.path(output_case, paste0("data_",site,"/raw_data"))
-  extra_data_case = file.path(output_case, paste0("data_",site,"/extra")) 
-  extra_indicators(
-    YEAR,
-    site,
-    input_brut_data_case =  input_brut_data_case,
-    extra_data_case      = extra_data_case
-  )
+  #input_brut_data_case = file.path(output_case, paste0("data_",site,"/raw_data"))
+  #extra_data_case = file.path(output_case, paste0("data_",site,"/extra")) 
+  #extra_indicators(
+  #  YEAR,
+  #  site,
+  #  input_brut_data_case =  input_brut_data_case,
+  #  extra_data_case      = extra_data_case
+  #)
+  
+  
+
   
   
   
+  #### 4. Calcul of double logistic in PPI ####
+  #-------------------------------------------#
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+  
+} 
   
   ## Fonction 4 : Delta_Day de MAXV : 
   #!!!!!!!!!!!!!!!!!!!!!!! A REPRENDRE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  DeltaDay_MAXD_processing(
-    YEAR                = YEAR,
-    DOY_range           = DOY_range,           # <— tu peux mettre 60:365
-    input_brut_data_case = input_brut_data_case,
-    delta_data_case     = PPI_data_case,
-    site                = site
-  )
+  #DeltaDay_MAXD_processing(
+    #YEAR                = YEAR,
+    #DOY_range           = DOY_range,           # <— tu peux mettre 60:365
+    #input_brut_data_case = input_brut_data_case,
+    #delta_data_case     = PPI_data_case,
+    #site                = site
+  #)
   
   
   ## Fonction 5 : Exctraction du pic de veget (MAXV)
  
-  Pmax <- PPI_extract_peak(site, YEAR, PPI_data_case, amp_min = 0.02, write_out = TRUE)
+  #Pmax <- PPI_extract_peak(site, YEAR, PPI_data_case, amp_min = 0.02, write_out = TRUE)
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   site <- "Cayolle"
